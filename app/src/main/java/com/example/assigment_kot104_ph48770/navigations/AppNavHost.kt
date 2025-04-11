@@ -6,6 +6,8 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.assigment_kot104_ph48770.screens.*
+import com.example.assigment_kot104_ph48770.screens.admin.ListCategoryScreen
+import com.example.assigment_kot104_ph48770.screens.admin.ListProductScreen
 import com.example.assigment_kot104_ph48770.service.ViewModelApp
 
 enum class ROUTE_NAME {
@@ -25,14 +27,16 @@ enum class ROUTE_NAME {
     selectShipment,
     myReview,
     rating,
-    payment
+    payment,
+    listProduct,
+    listCategory
 }
 
 @Composable
 fun AppNavHost(
     navController: NavHostController
 ) {
-    NavHost(navController = navController, startDestination = ROUTE_NAME.home.name) {
+    NavHost(navController = navController, startDestination = ROUTE_NAME.listCategory.name) {
         composable(ROUTE_NAME.welcome.name) { WelComeScreen(navController) }
         composable(ROUTE_NAME.login.name) { LoginScreen(navController) }
         composable(ROUTE_NAME.home.name) { FurnitureApp(navController) }
@@ -59,5 +63,9 @@ fun AppNavHost(
             val productId = backStackEntry.arguments?.getString("productId") ?: ""
             ProductDetailScreen(productId = productId, navController = navController)
         }
+
+        composable(ROUTE_NAME.listProduct.name) { ListProductScreen(navController) }
+        composable(ROUTE_NAME.listCategory.name) { ListCategoryScreen(navController) }
+
     }
 }

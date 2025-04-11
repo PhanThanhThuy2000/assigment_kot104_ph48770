@@ -7,10 +7,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,215 +26,190 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.example.assigment_kot104_ph48770.R
 import com.example.assigment_kot104_ph48770.navigations.ROUTE_NAME
-//import com.example.assigment_kot104_ph48770.navigation.Destinations
+import com.example.assigment_kot104_ph48770.service.RetrofitInstance
+import kotlinx.coroutines.launch
 
-// Đánh dấu đây là một hàm Composable để hiển thị màn hình đăng nhập
-@OptIn(ExperimentalMaterial3Api::class) // Sử dụng API thử nghiệm của Material3
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LoginScreen(
-    navController: NavHostController // Tham số để điều hướng giữa các màn hình trong ứng dụng
-) {
-    // Khai báo các biến trạng thái để theo dõi giá trị người dùng nhập
-    var email by remember { mutableStateOf("") } // Lưu giá trị email, ban đầu là rỗng
-    var password by remember { mutableStateOf("") } // Lưu giá trị mật khẩu, ban đầu là rỗng
-    var passwordVisible by remember { mutableStateOf(false) } // Trạng thái hiển thị/ẩn mật khẩu, mặc định là ẩn
-    var emailError by remember { mutableStateOf<String?>(null) } // Lưu thông báo lỗi cho email, ban đầu là null
-    var passwordError by remember { mutableStateOf<String?>(null) } // Lưu thông báo lỗi cho mật khẩu, ban đầu là null
+fun LoginScreen(navController: NavHostController) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var loginError by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
 
-    // Hàm kiểm tra tính hợp lệ của email và mật khẩu
     fun validateInputs(): Boolean {
-        // Kiểm tra email
-        emailError = if (email.isBlank()) { // Nếu email rỗng
-            "Email cannot be empty" // Gán thông báo lỗi
-        } else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) { // Nếu email không đúng định dạng
-            "Invalid email format" // Gán thông báo lỗi
-        } else {
-            null // Không có lỗi
-        }
+        emailError = if (email.isBlank()) "Email cannot be empty"
+        else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) "Invalid email format"
+        else null
 
-        // Kiểm tra mật khẩu
-        passwordError = if (password.isBlank()) { // Nếu mật khẩu rỗng
-            "Password cannot be empty" // Gán thông báo lỗi
-        } else if (password.length < 6) { // Nếu mật khẩu dưới 6 ký tự
-            "Password must be at least 6 characters" // Gán thông báo lỗi
-        } else {
-            null // Không có lỗi
-        }
+        passwordError = if (password.isBlank()) "Password cannot be empty"
+        else if (password.length < 6) "Password must be at least 6 characters"
+        else null
 
-        return emailError == null && passwordError == null // Trả về true nếu không có lỗi nào
+        return emailError == null && passwordError == null
     }
 
-    // Bố cục chính của màn hình, sử dụng Box làm nền
+    fun login() {
+        if (!validateInputs()) return
+
+        scope.launch {
+            try {
+                val users = RetrofitInstance.api.getUsers(email)
+                val user = users.find { it.email == email && it.password == password }
+                if (user != null) {
+                    navController.navigate(ROUTE_NAME.home.name)
+                } else {
+                    loginError = "Invalid email or password"
+                }
+            } catch (e: Exception) {
+                loginError = "Login failed: ${e.message}"
+            }
+        }
+    }
+
     Box(
         modifier = Modifier
-            .fillMaxSize() // Chiếm toàn bộ kích thước màn hình
-            .background(Color.White) // Đặt màu nền là trắng
+            .fillMaxSize()
+            .background(Color.White)
     ) {
-        // Cột chứa toàn bộ nội dung giao diện
         Column(
             modifier = Modifier
-                .fillMaxSize() // Chiếm toàn bộ kích thước của Box
-                .padding(horizontal = 24.dp), // Thêm lề ngang 24dp
-            horizontalAlignment = Alignment.CenterHorizontally // Căn giữa ngang các phần tử con
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(60.dp)) // Khoảng trống 60dp phía trên
+            Spacer(modifier = Modifier.height(60.dp))
 
-            // Hàng chứa logo và hai đường kẻ ngang
             Row(
-                modifier = Modifier.fillMaxWidth(), // Chiếm toàn bộ chiều rộng
-                verticalAlignment = Alignment.CenterVertically // Căn giữa dọc các phần tử trong hàng
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Đường kẻ ngang bên trái logo
-                Divider(
-                    modifier = Modifier.weight(1f), // Chiếm không gian còn lại, chia đều với bên phải
-                    color = Color.LightGray, // Màu xám nhạt
-                    thickness = 1.dp // Độ dày 1dp
-                )
-
-                // Hộp chứa logo
+                Divider(modifier = Modifier.weight(1f), color = Color.LightGray, thickness = 1.dp)
                 Box(
                     modifier = Modifier
-                        .padding(horizontal = 16.dp) // Lề ngang 16dp
-                        .size(80.dp) // Kích thước 80dp x 80dp
-                        .clip(CircleShape) // Bo tròn thành hình tròn
-                        .background(Color.White) // Nền trắng
-                        .padding(16.dp), // Lề bên trong 16dp
-                    contentAlignment = Alignment.Center // Căn giữa nội dung trong Box
+                        .padding(horizontal = 16.dp)
+                        .size(80.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                        .padding(16.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.group), // Tải hình ảnh từ tài nguyên drawable
-                        contentDescription = "App Logo", // Mô tả nội dung cho trợ năng
-                        modifier = Modifier.size(48.dp) // Kích thước logo 48dp
+                        painter = painterResource(id = R.drawable.group),
+                        contentDescription = "App Logo",
+                        modifier = Modifier.size(48.dp)
                     )
                 }
-
-                // Đường kẻ ngang bên phải logo
-                Divider(
-                    modifier = Modifier.weight(1f), // Chiếm không gian còn lại, chia đều với bên trái
-                    color = Color.LightGray, // Màu xám nhạt
-                    thickness = 1.dp // Độ dày 1dp
-                )
+                Divider(modifier = Modifier.weight(1f), color = Color.LightGray, thickness = 1.dp)
             }
 
-            Spacer(modifier = Modifier.height(24.dp)) // Khoảng trống 24dp giữa logo và tiêu đề
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Tiêu đề "HELLO !"
             Text(
-                text = "HELLO !", // Nội dung văn bản
-                fontSize = 30.sp, // Cỡ chữ 30sp
-                color = Color.Gray, // Màu xám
-                fontWeight = FontWeight.Normal // Độ đậm bình thường
+                text = "HELLO !",
+                fontSize = 30.sp,
+                color = Color.Gray,
+                fontWeight = FontWeight.Normal
             )
 
-            // Tiêu đề phụ "WELCOME BACK"
             Text(
-                text = "WELCOME BACK", // Nội dung văn bản
-                fontSize = 35.sp, // Cỡ chữ 35sp
-                color = Color.DarkGray, // Màu xám đậm
-                fontWeight = FontWeight.Bold // Độ đậm lớn
+                text = "WELCOME BACK",
+                fontSize = 35.sp,
+                color = Color.DarkGray,
+                fontWeight = FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(40.dp)) // Khoảng trống 40dp trước trường nhập liệu
+            Spacer(modifier = Modifier.height(40.dp))
 
-            // Trường nhập email
             OutlinedTextField(
-                value = email, // Giá trị hiện tại của email
-                onValueChange = { email = it }, // Cập nhật giá trị khi người dùng nhập
-                label = { Text("Email") }, // Nhãn hiển thị bên trong trường nhập
-                modifier = Modifier.fillMaxWidth(), // Chiếm toàn bộ chiều rộng
-                singleLine = true, // Chỉ cho phép nhập một dòng
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email), // Bàn phím dạng email
-                isError = emailError != null, // Hiển thị trạng thái lỗi nếu có
-                supportingText = { // Văn bản hỗ trợ hiển thị lỗi (nếu có)
-                    if (emailError != null) {
-                        Text(text = emailError ?: "", color = MaterialTheme.colorScheme.error) // Hiển thị lỗi màu đỏ
-                    }
-                }
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                isError = emailError != null,
+                supportingText = { if (emailError != null) Text(text = emailError ?: "", color = MaterialTheme.colorScheme.error) }
             )
 
-            Spacer(modifier = Modifier.height(16.dp)) // Khoảng trống 16dp giữa các trường nhập
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // Trường nhập mật khẩu
             OutlinedTextField(
-                value = password, // Giá trị hiện tại của mật khẩu
-                onValueChange = { password = it }, // Cập nhật giá trị khi người dùng nhập
-                label = { Text("Password") }, // Nhãn hiển thị bên trong trường nhập
-                modifier = Modifier.fillMaxWidth(), // Chiếm toàn bộ chiều rộng
-                singleLine = true, // Chỉ cho phép nhập một dòng
-                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(), // Hiển thị hoặc ẩn mật khẩu
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password), // Bàn phím dạng mật khẩu
-                trailingIcon = { // Biểu tượng hiển thị/ẩn mật khẩu
-                    IconButton(onClick = { passwordVisible = !passwordVisible }) { // Đổi trạng thái khi nhấn
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Password") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
-                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff, // Chọn biểu tượng dựa trên trạng thái
-                            contentDescription = if (passwordVisible) "Hide password" else "Show password" // Mô tả trợ năng
+                            imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
                         )
                     }
                 },
-                isError = passwordError != null, // Hiển thị trạng thái lỗi nếu có
-                supportingText = { // Văn bản hỗ trợ hiển thị lỗi (nếu có)
-                    if (passwordError != null) {
-                        Text(text = passwordError ?: "", color = MaterialTheme.colorScheme.error) // Hiển thị lỗi màu đỏ
-                    }
-                }
+                isError = passwordError != null,
+                supportingText = { if (passwordError != null) Text(text = passwordError ?: "", color = MaterialTheme.colorScheme.error) }
             )
 
-            Spacer(modifier = Modifier.height(8.dp)) // Khoảng trống 8dp trước văn bản "Forgot Password"
+            Spacer(modifier = Modifier.height(8.dp))
 
-            // Văn bản "Forgot Password" với khả năng nhấn
             Text(
-                text = "Forgot Password", // Nội dung văn bản
+                text = "Forgot Password",
                 modifier = Modifier
-                    .align(Alignment.End) // Căn phải
-                    .clickable { /* Xử lý quên mật khẩu */ }, // Có thể nhấn (chưa xử lý logic)
-                color = Color.Gray, // Màu xám
-                fontSize = 14.sp, // Cỡ chữ 14sp
-                fontWeight = FontWeight.Medium // Độ đậm trung bình
+                    .align(Alignment.End)
+                    .clickable { /* TODO: Implement forgot password */ },
+                color = Color.Gray,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
             )
 
-            Spacer(modifier = Modifier.height(24.dp)) // Khoảng trống 24dp trước nút đăng nhập
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Nút "Log in"
-            Button(
-                onClick = {
-                    if (validateInputs()) { // Kiểm tra tính hợp lệ trước khi thực hiện
-                        navController.navigate(ROUTE_NAME.home.name)
-                    }
-                },
-                modifier = Modifier
-                    .fillMaxWidth() // Chiếm toàn bộ chiều rộng
-                    .height(56.dp), // Chiều cao 56dp
-                shape = RoundedCornerShape(8.dp), // Bo góc 8dp
-                colors = ButtonDefaults.buttonColors(containerColor = Color.Black) // Màu nền đen
-            ) {
+            loginError?.let {
                 Text(
-                    text = "Log in", // Nội dung văn bản
-                    fontSize = 20.sp, // Cỡ chữ 20sp
-                    color = Color.White, // Màu trắng
-                    fontWeight = FontWeight.Medium // Độ đậm trung bình
+                    text = it,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(bottom = 8.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp)) // Khoảng trống 16dp giữa các nút
-
-            // Nút "SIGN UP"
             Button(
-                onClick = {
-                    navController.navigate(ROUTE_NAME.signup.name)
-
-
-                }, // Điều hướng đến màn hình đăng ký
+                onClick = { login() },
                 modifier = Modifier
-                    .fillMaxWidth() // Chiếm toàn bộ chiều rộng
-                    .height(56.dp), // Chiều cao 56dp
-                shape = RoundedCornerShape(8.dp), // Bo góc 8dp
-                colors = ButtonDefaults.buttonColors(containerColor = Color.White) // Màu nền trắng
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.Black)
             ) {
                 Text(
-                    text = "SIGN UP", // Nội dung văn bản
-                    fontSize = 20.sp, // Cỡ chữ 20sp
-                    color = Color.Black, // Màu đen
-                    fontWeight = FontWeight.Bold // Độ đậm lớn
+                    text = "Log in",
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { navController.navigate(ROUTE_NAME.signup.name) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color.White)
+            ) {
+                Text(
+                    text = "SIGN UP",
+                    fontSize = 20.sp,
+                    color = Color.Black,
+                    fontWeight = FontWeight.Bold
                 )
             }
         }

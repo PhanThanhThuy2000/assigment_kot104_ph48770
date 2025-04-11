@@ -283,170 +283,6 @@ fun ProductItem(image: String, name: String, price: Double, productId: String, n
 }
 
 @Composable
-fun FavoriteItem(image: String, name: String, price: Double) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(110.dp)
-            .background(Color.White),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AsyncImage(
-            model = image,
-            contentDescription = null,
-            modifier = Modifier
-                .width(110.dp)
-                .height(120.dp),
-            contentScale = ContentScale.FillBounds,
-            placeholder = painterResource(R.drawable.image3),
-            error = painterResource(R.drawable.image3)
-        )
-
-        Column(
-            modifier = Modifier
-                .width(200.dp)
-                .padding(start = 10.dp)
-                .fillMaxHeight()
-        ) {
-            Text(
-                text = name,
-                fontSize = 15.sp,
-                fontWeight = FontWeight(600),
-                color = colorResource(id = R.color.gray),
-                fontFamily = FontFamily(Font(R.font.nunitosans_7pt_condensed_light))
-            )
-            Spacer(modifier = Modifier.height(3.dp))
-            Text(
-                text = "\$ $price",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                fontFamily = FontFamily(Font(R.font.nunitosans_7pt_condensed_bold))
-            )
-        }
-        Column(
-            modifier = Modifier.fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.delete),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-
-            Row {
-                IconButton(onClick = { /*TODO*/ }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.bag),
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun CartItem(image: String, name: String, price: Double) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(110.dp)
-            .background(Color.White),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AsyncImage(
-            model = image,
-            contentDescription = null,
-            modifier = Modifier
-                .width(110.dp)
-                .height(120.dp),
-            contentScale = ContentScale.FillBounds,
-            placeholder = painterResource(R.drawable.image3),
-            error = painterResource(R.drawable.image3)
-        )
-
-        Column(
-            modifier = Modifier
-                .width(200.dp)
-                .padding(start = 10.dp)
-                .fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    text = name,
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight(600),
-                    color = colorResource(id = R.color.gray),
-                    fontFamily = FontFamily(Font(R.font.nunitosans_7pt_condensed_light))
-                )
-                Spacer(modifier = Modifier.height(3.dp))
-                Text(
-                    text = "\$ $price",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    fontFamily = FontFamily(Font(R.font.nunitosans_7pt_condensed_bold))
-                )
-            }
-            Row(
-                modifier = Modifier.width(113.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(color = Color("#E0E0E0".toColorInt())),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.add),
-                        contentDescription = null,
-                        modifier = Modifier.size(13.dp)
-                    )
-                }
-                Text(
-                    text = "01",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight(700),
-                    fontFamily = FontFamily(Font(R.font.nunitosans_7pt_condensed_bold))
-                )
-                Box(
-                    modifier = Modifier
-                        .size(30.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(color = Color("#E0E0E0".toColorInt())),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.apart),
-                        contentDescription = null,
-                        modifier = Modifier.size(13.dp)
-                    )
-                }
-            }
-        }
-        Column(
-            modifier = Modifier.fillMaxHeight(),
-            verticalArrangement = Arrangement.SpaceBetween,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.delete),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp)
-            )
-            Row {}
-        }
-    }
-}
-
-@Composable
 fun FurnitureApp(navHostController: NavController) {
     val navController = rememberNavController()
     val items = listOf(
@@ -608,10 +444,10 @@ fun NavigationGraph(
     navHostController: NavController,
     navController: NavHostController,
     innerPadding: PaddingValues,
-    isSearchBarVisible: Boolean, // Pass search bar visibility
-    onSearchBarToggle: (Boolean) -> Unit, // Pass toggle callback
-    searchQuery: String, // Pass search query
-    onSearchQueryChange: (String) -> Unit // Pass query change callback
+    isSearchBarVisible: Boolean,
+    onSearchBarToggle: (Boolean) -> Unit,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit
 ) {
     NavHost(
         navController,
@@ -635,14 +471,19 @@ fun NavigationGraph(
             route = "category/{categoryName}"
         ) { backStackEntry ->
             val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
-            // CategoryProductsScreen(categoryName, innerPadding, navHostController, navController)
+            CategoryProductsScreen(
+                categoryName = categoryName,
+                innerPadding = innerPadding,
+                navController = navHostController
+            )
         }
         composable(
             route = "productDetail/{productId}"
         ) { backStackEntry ->
             val productId = backStackEntry.arguments?.getString("productId") ?: ""
-            ProductDetailScreen(productId, navController)
+            ProductDetailScreen(productId, navHostController)
         }
+        composable("cart") { CartScreen(innerPadding, navHostController) } // Assuming you have a CartScreen
     }
 }
 

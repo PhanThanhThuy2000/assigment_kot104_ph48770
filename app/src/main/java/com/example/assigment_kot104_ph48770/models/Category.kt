@@ -3,6 +3,8 @@ import android.os.Parcelable
 import kotlinx.android.parcel.Parcelize
 @Parcelize
 class Category (
-    val image: String,
+    val id: String,
     val name: String,
+    val image: String,
+
 ) : Parcelable

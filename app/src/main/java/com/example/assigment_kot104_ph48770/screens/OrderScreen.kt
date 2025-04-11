@@ -32,6 +32,8 @@ import androidx.navigation.NavController
 import com.example.assigment_kot104_ph48770.CustomButton
 import com.example.assigment_kot104_ph48770.R
 import com.example.assigment_kot104_ph48770.service.ViewModelApp
+import java.text.SimpleDateFormat
+import java.util.*
 
 class OrderScreen : ComponentActivity() {
 }
@@ -74,13 +76,25 @@ fun OrderScreenRun(navController: NavController, viewModel: ViewModelApp = viewM
             )
         },
         content = { innerPadding ->
-            showOrder(innerPadding, viewModel)
+            ShowOrder(innerPadding, viewModel)
         }
     )
 }
+
 @Composable
-fun showOrder(innerPaddingValues: PaddingValues, viewModel: ViewModelApp) {
+fun ShowOrder(innerPaddingValues: PaddingValues, viewModel: ViewModelApp) {
     val orders by viewModel.orders // Fetch the list of orders
+    var selectedTab by remember { mutableStateOf("Delivered") } // Quản lý tab hiện tại
+
+    // Lọc đơn hàng theo tab
+    val filteredOrders = orders.filter { order ->
+        when (selectedTab) {
+            "Delivered" -> order.status == "Delivered"
+            "Processing" -> order.status == "Processing"
+            "Canceled" -> order.status == "Canceled"
+            else -> true
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -102,8 +116,18 @@ fun showOrder(innerPaddingValues: PaddingValues, viewModel: ViewModelApp) {
                 verticalArrangement = Arrangement.SpaceAround,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(text = "Delivered", fontSize = 20.sp, fontWeight = FontWeight(700))
-                Divider(color = Color.Black, thickness = 4.dp, modifier = Modifier.width(40.dp))
+                Text(
+                    text = "Delivered",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight(700),
+                    color = if (selectedTab == "Delivered") Color.Black else Color.Gray,
+                    modifier = Modifier.clickable { selectedTab = "Delivered" }
+                )
+                if (selectedTab == "Delivered") {
+                    Divider(color = Color.Black, thickness = 4.dp, modifier = Modifier.width(40.dp))
+                } else {
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
             }
             Column(
                 modifier = Modifier
@@ -115,10 +139,15 @@ fun showOrder(innerPaddingValues: PaddingValues, viewModel: ViewModelApp) {
                 Text(
                     text = "Processing",
                     fontSize = 20.sp,
-                    color = Color.Gray,
-                    fontWeight = FontWeight(700)
+                    color = if (selectedTab == "Processing") Color.Black else Color.Gray,
+                    fontWeight = FontWeight(700),
+                    modifier = Modifier.clickable { selectedTab = "Processing" }
                 )
-                Text(text = "")
+                if (selectedTab == "Processing") {
+                    Divider(color = Color.Black, thickness = 4.dp, modifier = Modifier.width(40.dp))
+                } else {
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
             }
             Column(
                 modifier = Modifier
@@ -130,15 +159,19 @@ fun showOrder(innerPaddingValues: PaddingValues, viewModel: ViewModelApp) {
                 Text(
                     text = "Canceled",
                     fontSize = 20.sp,
-                    color = Color.Gray,
-                    fontWeight = FontWeight(700)
+                    color = if (selectedTab == "Canceled") Color.Black else Color.Gray,
+                    fontWeight = FontWeight(700),
+                    modifier = Modifier.clickable { selectedTab = "Canceled" }
                 )
-                Text(text = "")
+                if (selectedTab == "Canceled") {
+                    Divider(color = Color.Black, thickness = 4.dp, modifier = Modifier.width(40.dp))
+                } else {
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
             }
         }
         Column {
-            if (orders.isEmpty()) {
-                // Display a message if there are no orders
+            if (filteredOrders.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -154,7 +187,7 @@ fun showOrder(innerPaddingValues: PaddingValues, viewModel: ViewModelApp) {
                 }
             } else {
                 LazyColumn {
-                    items(orders) { order ->
+                    items(filteredOrders) { order ->
                         Spacer(modifier = Modifier.height(20.dp))
                         OrderItem(order = order)
                     }
@@ -166,6 +199,19 @@ fun showOrder(innerPaddingValues: PaddingValues, viewModel: ViewModelApp) {
 
 @Composable
 fun OrderItem(order: Order) {
+    // Định dạng ngày từ "2025-04-11" thành "11/04/2025"
+    val inputFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+    val outputFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val formattedDate = try {
+        val date = inputFormat.parse(order.date)
+        outputFormat.format(date)
+    } catch (e: Exception) {
+        order.date // Nếu parse thất bại, giữ nguyên định dạng
+    }
+
+    // Tính tổng quantity từ items
+    val totalQuantity = order.items.sumOf { it.quantity }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -181,13 +227,13 @@ fun OrderItem(order: Order) {
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = order.orderId,
+                text = "Order No:${order.orderId.take(12)}", // Giới hạn orderId để giống giao diện
                 fontSize = 16.sp,
                 fontWeight = FontWeight(600),
                 color = Color.Black
             )
             Text(
-                text = order.date,
+                text = formattedDate,
                 fontSize = 14.sp,
                 fontWeight = FontWeight(500),
                 color = Color.Gray
@@ -218,7 +264,7 @@ fun OrderItem(order: Order) {
                         fontWeight = FontWeight(700),
                     )
                 ) {
-                    append(order.items.sumOf { it.quantity }.toString())
+                    append(totalQuantity.toString())
                 }
             })
             Text(text = buildAnnotatedString {

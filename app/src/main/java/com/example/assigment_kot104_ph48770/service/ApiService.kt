@@ -4,12 +4,18 @@ import Order
 import com.example.assigment_kot104_ph48770.models.CartItem
 import com.example.assigment_kot104_ph48770.models.Category
 import com.example.assigment_kot104_ph48770.models.Product
+import com.example.assigment_kot104_ph48770.models.User
 import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.*
 
 interface ApiService {
+    @POST("users")
+    suspend fun registerUser(@Body user: User): User
+
+    @GET("users")
+    suspend fun getUsers(@Query("email") email: String): List<User>
     @GET("product")
     suspend fun getProducts(): List<Product>
 
@@ -43,11 +49,27 @@ interface ApiService {
     // Save an order to JSON Server (optional, for persistence)
     @POST("orders")
     suspend fun saveOrder(@Body order: Order): Order
+
+
+//    ADMIN
+    @POST("product")
+    suspend fun createProduct(@Body product: Product): Response<Product>
+    @PUT("product/{id}")
+    suspend fun updateProduct(@Path("id") id: String,@Body product: Product): Response<Product>
+    @DELETE("product/{id}")
+    suspend fun deleteProduct(@Path("id") id: String): Response<Unit>
+
+    @POST("category")
+    suspend fun createCategory(@Body category: Category): Response<Product>
+    @PUT("category/{id}")
+    suspend fun updateCategory(@Path("id") id: String,@Body category: Category): Response<Category>
+    @DELETE("category/{id}")
+    suspend fun deleteCategory(@Path("id") id: String): Response<Unit>
 }
 
 // Create Retrofit object
 object RetrofitInstance {
-    private const val BASE_URL = "http://192.168.1.4:3000/" // Ensure this matches your JSON Server URL
+    private const val BASE_URL = "http://192.168.1.7:3000/" // Ensure this matches your JSON Server URL
     val api: ApiService by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
