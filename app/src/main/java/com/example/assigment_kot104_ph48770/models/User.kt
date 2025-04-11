@@ -4,5 +4,6 @@ data class User(
     val id: Int? = null, // Server-assigned ID
     val name: String,
     val email: String,
-    val password: String
+    val password: String,
+    val role: Int
 )

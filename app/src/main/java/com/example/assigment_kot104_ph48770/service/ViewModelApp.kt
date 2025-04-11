@@ -169,27 +169,6 @@ class ViewModelApp : ViewModel() {
         }
     }
 
-    fun registerUser(name: String, email: String, password: String, onResult: (Boolean, String?) -> Unit) {
-        viewModelScope.launch {
-            _isLoading.value = true
-            try {
-                val existingUsers = RetrofitInstance.api.getUsers(email)
-                if (existingUsers.isNotEmpty()) {
-                    onResult(false, "Email already registered")
-                } else {
-                    val user = User(name = name, email = email, password = password)
-                    RetrofitInstance.api.registerUser(user)
-                    onResult(true, null)
-                }
-            } catch (e: Exception) {
-                Log.e("RegisterError", e.message.toString())
-                onResult(false, "Registration failed: ${e.message}")
-            } finally {
-                _isLoading.value = false
-            }
-        }
-    }
-
     // ADMIN
     fun deleteProduct(id:String) {
         viewModelScope.launch {

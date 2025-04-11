@@ -77,7 +77,7 @@ fun CategoryProductsScreen(
                             name = item.name,
                             price = item.price,
                             productId = item.id,
-                                    navController = navController
+                            navController = navController
                         )
                     }
                 }

@@ -67,7 +67,7 @@ fun SignupScreen(navController: NavHostController) {
                 }
 
                 // Register new user
-                val user = User(name = name, email = email, password = password)
+                val user = User(name = name, email = email, password = password, role = 1)
                 RetrofitInstance.api.registerUser(user)
                 navController.navigate(ROUTE_NAME.login.name)
             } catch (e: Exception) {

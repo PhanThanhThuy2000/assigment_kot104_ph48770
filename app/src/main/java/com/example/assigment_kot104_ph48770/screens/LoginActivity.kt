@@ -60,7 +60,11 @@ fun LoginScreen(navController: NavHostController) {
                 val users = RetrofitInstance.api.getUsers(email)
                 val user = users.find { it.email == email && it.password == password }
                 if (user != null) {
-                    navController.navigate(ROUTE_NAME.home.name)
+                    when (user.role) {
+                        1 -> navController.navigate(ROUTE_NAME.home.name)
+                        2 -> navController.navigate(ROUTE_NAME.admin.name)
+                        else -> loginError = "Invalid user role"
+                    }
                 } else {
                     loginError = "Invalid email or password"
                 }
