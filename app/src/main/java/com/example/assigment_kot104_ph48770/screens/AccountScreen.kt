@@ -63,47 +63,84 @@ fun MethodAccount(title : String , message : String , click : () -> Unit){
 }
 
 @Composable
-fun AccountScreenControl(innerPaddingValues: PaddingValues , navController: NavController){
-    Column (modifier = Modifier
-        .fillMaxSize()
-        .background(Color("#f5f6fa".toColorInt()))){
-        Column (modifier = Modifier
+fun AccountScreenControl(innerPaddingValues: PaddingValues, navController: NavController) {
+    Column(
+        modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp),
-        ){
-            Row (modifier = Modifier
-                .fillMaxWidth()
-                .height(80.dp),
-                verticalAlignment = Alignment.CenterVertically){
-                Image(painter = painterResource(id = R.drawable.avatar), contentDescription = null,
-                    modifier = Modifier.size(80.dp))
-                Spacer(modifier = Modifier.width(15.dp))
-                Column {
-                    Text(text = "Bruno Pham", fontSize = 22.sp, fontWeight = FontWeight(700), fontFamily = FontFamily(
-                        Font(R.font.nunitosans_7pt_condensed_bold)
-                    ))
-                    Text(text = "bruno203@gmail.com", fontSize = 15.sp, color = Color.Gray)
+            .background(Color("#f5f6fa".toColorInt()))
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(80.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.avatar),
+                        contentDescription = null,
+                        modifier = Modifier.size(80.dp)
+                    )
+                    Spacer(modifier = Modifier.width(15.dp))
+                    Column {
+                        Text(
+                            text = "Bruno Pham",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight(700),
+                            fontFamily = FontFamily(Font(R.font.nunitosans_7pt_condensed_bold))
+                        )
+                        Text(
+                            text = "bruno203@gmail.com",
+                            fontSize = 15.sp,
+                            color = Color.Gray
+                        )
+                    }
                 }
+                Spacer(modifier = Modifier.height(30.dp))
             }
+            items(1) {
+                MethodAccount(
+                    title = "My orders",
+                    message = "Already have 10 orders",
+                    click = { navController.navigate("order") }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                MethodAccount(
+                    title = "Shipping Addresses",
+                    message = "03 Addresses",
+                    click = { navController.navigate("selectShipment") }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                MethodAccount(
+                    title = "Payment Method",
+                    message = "You have 2 cards",
+                    click = { navController.navigate("paymentMethod") }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                MethodAccount(
+                    title = "My reviews",
+                    message = "Reviews for 5 items",
+                    click = { navController.navigate("myReview") }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                MethodAccount(
+                    title = "Setting",
+                    message = "Notification, Password, FAQ, Contact",
+                    click = { navController.navigate("setting") }
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                MethodAccount(
+                    title = "Logout",
+                    message = "",
 
-            Spacer(modifier = Modifier.height(30.dp))
-
-            Column {
-//                         composable("paymentMethod") { SelectPaymentScreen(navController) }
-//            composable("setting") { settingScreens(navController) }
-//            composable("selectShipment") { AddressScreen(navController) }
-//            composable("myReview") { MyReViewTopBar(navController) }
-//            composable("rating") { ReView(navController) }
-                        MethodAccount(title = "My orders", message = "Already have 10 orders" , click = {navController.navigate("order")})
-                        Spacer(modifier = Modifier.height(10.dp))
-                        MethodAccount(title = "Shipping Addresses", message = "03 Addresses", click = {navController.navigate("selectShipment")})
-                        Spacer(modifier = Modifier.height(10.dp))
-                        MethodAccount(title = "Payment Method", message = "You have 2 cards", click = {navController.navigate("paymentMethod")})
-                        Spacer(modifier = Modifier.height(10.dp))
-                        MethodAccount(title = "My reviews", message = "Reviews for 5 items", click = {navController.navigate("myReview")})
-                        Spacer(modifier = Modifier.height(10.dp))
-                        MethodAccount(title = "Setting", message = "Notification, Password, FAQ, Contact", click = {navController.navigate("setting")})
-                        Spacer(modifier = Modifier.height(10.dp))
+                    click = { navController.navigate("login") }
+                )
             }
         }
     }

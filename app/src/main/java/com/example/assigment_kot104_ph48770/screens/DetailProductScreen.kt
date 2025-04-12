@@ -17,6 +17,8 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -41,7 +43,23 @@ fun ProductDetailScreen(
         viewModelApp.getListProduct()
     }
 
-    val product = viewModelApp.listProduct.value?.find { it.id == productId } ?: return
+    val product = viewModelApp.listProduct.value?.find { it.id == productId }
+    val favoriteProducts = viewModelApp.favoriteProducts.value
+    val isFavorite = favoriteProducts.contains(product)
+
+    if (product == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Product not found",
+                fontSize = 18.sp,
+                color = Color.Gray
+            )
+        }
+        return
+    }
 
     Column(
         modifier = Modifier
@@ -86,7 +104,7 @@ fun ProductDetailScreen(
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.add),
-                            contentDescription = null,
+                            contentDescription = "Increase quantity",
                             modifier = Modifier.size(13.dp)
                         )
                     }
@@ -105,7 +123,7 @@ fun ProductDetailScreen(
                     ) {
                         Image(
                             painter = painterResource(id = R.drawable.apart),
-                            contentDescription = null,
+                            contentDescription = "Decrease quantity",
                             modifier = Modifier.size(13.dp)
                         )
                     }
@@ -117,7 +135,7 @@ fun ProductDetailScreen(
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.star),
-                    contentDescription = null,
+                    contentDescription = "Rating star",
                     modifier = Modifier.size(20.dp)
                 )
                 Text(
@@ -133,9 +151,12 @@ fun ProductDetailScreen(
                     fontWeight = FontWeight(500),
                     color = Color("#808080".toColorInt()),
                     fontFamily = FontFamily(Font(R.font.nunitosans_7pt_condensed_bold)),
-                    modifier = Modifier.padding(start = 15.dp).clickable {
-                        navController.navigate("rating")
-                    }
+                    modifier = Modifier
+                        .padding(start = 15.dp)
+                        .clickable {
+                            navController.navigate("rating")
+                        }
+                        .semantics { contentDescription = "View reviews" }
                 )
             }
             Text(
@@ -156,12 +177,21 @@ fun ProductDetailScreen(
                     modifier = Modifier
                         .size(60.dp)
                         .shadow(elevation = 2.dp, RoundedCornerShape(8.dp))
-                        .background(color = Color("#F5F5F5".toColorInt())),
+                        .background(color = Color("#F5F5F5".toColorInt()))
+                        .clickable {
+                            if (isFavorite) {
+                                viewModelApp.removeFromFavorites(product)
+                            } else {
+                                viewModelApp.addToFavorites(product)
+                                navController.navigate("favorite")
+                            }
+                        }
+                        .semantics { contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites" },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.marker),
+                        painter = painterResource(id = if (isFavorite) R.drawable.marker else R.drawable.marker),
                         contentDescription = null,
                         modifier = Modifier.size(22.dp)
                     )
@@ -177,6 +207,7 @@ fun ProductDetailScreen(
                             viewModelApp.addToCart(product)
                             navController.navigate("cart")
                         })
+                        .semantics { contentDescription = "Add to cart" }
                 ) {
                     Row(
                         modifier = Modifier.fillMaxSize(),
@@ -212,7 +243,7 @@ fun Custom(navController: NavController, imageUrl: String) {
                 Box {}
                 AsyncImage(
                     model = imageUrl,
-                    contentDescription = null,
+                    contentDescription = "Product image",
                     modifier = Modifier
                         .width(330.dp)
                         .fillMaxHeight()
@@ -242,7 +273,8 @@ fun Custom(navController: NavController, imageUrl: String) {
                         .size(45.dp)
                         .clickable { navController.navigateUp() }
                         .background(color = Color.White, RoundedCornerShape(14.dp))
-                        .shadow(elevation = 0.dp, shape = RoundedCornerShape(14.dp), clip = true),
+                        .shadow(elevation = 0.dp, shape = RoundedCornerShape(14.dp), clip = true)
+                        .semantics { contentDescription = "Back" },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Center
                 ) {
@@ -261,9 +293,21 @@ fun Custom(navController: NavController, imageUrl: String) {
                     verticalArrangement = Arrangement.SpaceEvenly,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Image(painter = painterResource(id = R.drawable.color1), contentDescription = null, modifier = Modifier.size(34.dp))
-                    Image(painter = painterResource(id = R.drawable.color2), contentDescription = null, modifier = Modifier.size(34.dp))
-                    Image(painter = painterResource(id = R.drawable.color3), contentDescription = null, modifier = Modifier.size(34.dp))
+                    Image(
+                        painter = painterResource(id = R.drawable.color1),
+                        contentDescription = "Color option 1",
+                        modifier = Modifier.size(34.dp)
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.color2),
+                        contentDescription = "Color option 2",
+                        modifier = Modifier.size(34.dp)
+                    )
+                    Image(
+                        painter = painterResource(id = R.drawable.color3),
+                        contentDescription = "Color option 3",
+                        modifier = Modifier.size(34.dp)
+                    )
                 }
                 Row {}
             }

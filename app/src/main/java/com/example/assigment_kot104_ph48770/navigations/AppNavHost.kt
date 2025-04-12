@@ -1,5 +1,6 @@
 package com.example.assigment_kot104_ph48770.navigations
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -36,9 +37,10 @@ enum class ROUTE_NAME {
 
 @Composable
 fun AppNavHost(
-    navController: NavHostController
+    navController: NavHostController,
+    innerPadding: PaddingValues
 ) {
-    NavHost(navController = navController, startDestination = ROUTE_NAME.login.name) {
+    NavHost(navController = navController, startDestination = ROUTE_NAME.home.name) {
         composable(ROUTE_NAME.welcome.name) { WelComeScreen(navController) }
         composable(ROUTE_NAME.login.name) { LoginScreen(navController) }
         composable(ROUTE_NAME.home.name) { FurnitureApp(navController) }
@@ -56,6 +58,7 @@ fun AppNavHost(
         composable(ROUTE_NAME.selectShipment.name) { AddressScreen(navController) }
         composable(ROUTE_NAME.myReview.name) { MyReViewTopBar(navController) }
         composable(ROUTE_NAME.rating.name) { ReView(navController) }
+        composable(ROUTE_NAME.rating.name) { FavoriteScreen(innerPadding) }
         composable(ROUTE_NAME.payment.name) { PaymentMethod() }
 
         // Updated route for product details with dynamic productId
@@ -72,3 +75,5 @@ fun AppNavHost(
 
     }
 }
+
+

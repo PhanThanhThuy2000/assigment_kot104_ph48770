@@ -97,25 +97,6 @@ class ViewModelApp : ViewModel() {
         }
     }
 
-    fun addToCart(product: Product) {
-        viewModelScope.launch {
-            try {
-                val existingItem = _cartItems.value.find { it.product.id == product.id }
-                if (existingItem != null) {
-                    _cartItems.value = _cartItems.value.map {
-                        if (it.product.id == product.id) it.copy(quantity = it.quantity + 1) else it
-                    }
-                } else {
-                    val newCartItem = CartItem(product, 1)
-                    val response = RetrofitInstance.api.addToCart(newCartItem)
-                    _cartItems.value = _cartItems.value + response
-                }
-            } catch (e: Exception) {
-                _errorMessage.value = "Failed to add to cart: ${e.message}"
-                Log.e("AddToCartError", e.message.toString())
-            }
-        }
-    }
 
     fun updateCartItemQuantity(cartItem: CartItem, newQuantity: Int) {
         if (newQuantity <= 0) {
@@ -165,6 +146,47 @@ class ViewModelApp : ViewModel() {
             } catch (e: Exception) {
                 _errorMessage.value = "Failed to clear cart: ${e.message}"
                 Log.e("ClearCartError", e.message.toString())
+            }
+        }
+    }
+
+
+// Danh sách sản phẩm yêu thích
+private val _favoriteProducts = mutableStateOf<List<Product>>(emptyList())
+    var favoriteProducts: State<List<Product>> = _favoriteProducts
+
+    // Hàm thêm sản phẩm vào danh sách yêu thích
+    fun addToFavorites(product: Product) {
+        val currentFavorites = _favoriteProducts.value.toMutableList()
+        if (!currentFavorites.contains(product)) { // Tránh thêm trùng
+            currentFavorites.add(product)
+            _favoriteProducts.value = currentFavorites
+        }
+    }
+
+    // Hàm xóa sản phẩm khỏi danh sách yêu thích (nếu cần)
+    fun removeFromFavorites(product: Product) {
+        val currentFavorites = _favoriteProducts.value.toMutableList()
+        currentFavorites.remove(product)
+        _favoriteProducts.value = currentFavorites
+    }
+
+    fun addToCart(product: Product) {
+        viewModelScope.launch {
+            try {
+                val existingItem = _cartItems.value.find { it.product.id == product.id }
+                if (existingItem != null) {
+                    _cartItems.value = _cartItems.value.map {
+                        if (it.product.id == product.id) it.copy(quantity = it.quantity + 1) else it
+                    }
+                } else {
+                    val newCartItem = CartItem(product, 1)
+                    val response = RetrofitInstance.api.addToCart(newCartItem)
+                    _cartItems.value = _cartItems.value + response
+                }
+            } catch (e: Exception) {
+                _errorMessage.value = "Failed to add to cart: ${e.message}"
+                Log.e("AddToCartError", e.message.toString())
             }
         }
     }
@@ -265,5 +287,4 @@ class ViewModelApp : ViewModel() {
             }
         }
     }
-
 }

@@ -38,6 +38,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -92,11 +94,19 @@ fun HomeScreen(
     val listProductState by remember { viewModelApp.listProduct }
     val listProduct = listProductState ?: emptyList()
     val listCategoryState by remember { viewModelApp.listCategory }
-    val listCategory = listCategoryState ?: emptyList()
+    val listCategory = listCategoryState?.filter { it.id.isNotEmpty() } ?: emptyList() // Filter out invalid categories
 
-    // Filtered product list based on search query (with diacritics removed)
-    val filteredProducts = listProduct.filter {
-        it.name.removeDiacritics().contains(searchQuery.removeDiacritics(), ignoreCase = true)
+    // State to track selected category ID (matches product.categoryName)
+    var selectedCategoryId by rememberSaveable { mutableStateOf<String?>(null) }
+
+    // Filtered product list based on search query and selected category
+    val filteredProducts = listProduct.filter { product ->
+        val matchesSearch = product.name.removeDiacritics()
+            .contains(searchQuery.removeDiacritics(), ignoreCase = true)
+        val matchesCategory = selectedCategoryId?.let { categoryId ->
+            product.categoryName == categoryId
+        } ?: true // If no category is selected, include all products
+        matchesSearch && matchesCategory
     }
 
     Column(
@@ -104,21 +114,22 @@ fun HomeScreen(
             .padding(top = 10.dp, end = 15.dp, start = 15.dp)
             .fillMaxSize()
     ) {
-        // Search Bar (only shown when isSearchBarVisible is true)
+        // Search Bar
         if (isSearchBarVisible) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { onSearchQueryChange(it) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 8.dp),
+                    .padding(bottom = 8.dp)
+                    .semantics { contentDescription = "Search products" },
                 placeholder = { Text("Search products...") },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 leadingIcon = {
                     Icon(
                         painter = painterResource(id = R.drawable.search),
-                        contentDescription = "Search Icon",
+                        contentDescription = "Close search",
                         modifier = Modifier.clickable { onSearchBarToggle(false) }
                     )
                 },
@@ -128,11 +139,18 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(10.dp))
 
+        // Category Row
         when {
-            listCategory.isEmpty() -> Text(
+            listCategory.isEmpty() && viewModelApp.isLoading.value -> Text(
                 text = "Loading categories...",
                 fontSize = 16.sp,
                 color = Color.Blue,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+            listCategory.isEmpty() -> Text(
+                text = "No categories available",
+                fontSize = 16.sp,
+                color = Color.Red,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
             else -> Row(
@@ -141,22 +159,40 @@ fun HomeScreen(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(15.dp)
             ) {
+                // "All" category
+                CategoryItem(
+                    image = "",
+                    name = "All",
+                    id = null,
+                    isSelected = selectedCategoryId == null,
+                    onClick = { selectedCategoryId = null }
+                )
                 listCategory.forEach { item ->
                     CategoryItem(
                         image = item.image,
                         name = item.name,
-                        navController = navController
+                        id = item.id,
+                        isSelected = selectedCategoryId == item.id,
+                        onClick = { selectedCategoryId = item.id }
                     )
                 }
             }
         }
+
         Spacer(modifier = Modifier.height(10.dp))
 
+        // Product Grid
         when {
-            filteredProducts.isEmpty() -> Text(
-                text = if (searchQuery.isEmpty()) "Loading products..." else "No products found",
+            viewModelApp.isLoading.value && listProduct.isEmpty() -> Text(
+                text = "Loading products...",
                 fontSize = 16.sp,
-                color = if (searchQuery.isEmpty()) Color.Blue else Color.Red,
+                color = Color.Blue,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
+            filteredProducts.isEmpty() -> Text(
+                text = "No products found",
+                fontSize = 16.sp,
+                color = Color.Red,
                 modifier = Modifier.align(Alignment.CenterHorizontally)
             )
             else -> {
@@ -182,11 +218,18 @@ fun HomeScreen(
 }
 
 @Composable
-fun CategoryItem(image: String, name: String, navController: NavController) {
+fun CategoryItem(
+    image: String,
+    name: String,
+    id: String?, // Added to track category ID
+    isSelected: Boolean,
+    onClick: () -> Unit
+) {
     Column(
         modifier = Modifier
             .padding(end = 0.dp)
-            .clickable { navController.navigate("category/$name") },
+            .clickable { onClick() }
+            .semantics { contentDescription = "Category: $name" },
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -194,30 +237,40 @@ fun CategoryItem(image: String, name: String, navController: NavController) {
             modifier = Modifier
                 .size(44.dp)
                 .shadow(elevation = 2.dp, RoundedCornerShape(14.dp))
-                .background(color = Color("#F5F5F5".toColorInt())),
+                .background(
+                    color = if (isSelected) Color("#FF6200EE".toColorInt()) else Color("#F5F5F5".toColorInt())
+                ),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
         ) {
-            AsyncImage(
-                model = image,
-                contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                contentScale = ContentScale.Crop,
-                placeholder = painterResource(R.drawable.image3),
-                error = painterResource(R.drawable.image3)
-            )
+            if (image.isNotEmpty()) {
+                AsyncImage(
+                    model = image,
+                    contentDescription = null,
+                    modifier = Modifier.size(22.dp),
+                    contentScale = ContentScale.Crop,
+                    placeholder = painterResource(R.drawable.image3),
+                    error = painterResource(R.drawable.image3)
+                )
+            } else {
+                Icon(
+                    painter = painterResource(id = R.drawable.add), // Replace with a suitable icon
+                    contentDescription = "All Categories",
+                    modifier = Modifier.size(22.dp),
+                    tint = if (isSelected) Color.White else Color.Black
+                )
+            }
         }
         Spacer(modifier = Modifier.height(5.dp))
         Text(
             text = name,
-            color = Color("#999999".toColorInt()),
+            color = if (isSelected) Color("#FF6200EE".toColorInt()) else Color("#999999".toColorInt()),
             fontSize = 14.sp,
             fontWeight = FontWeight.Bold,
             fontFamily = FontFamily(Font(R.font.nunitosans_7pt_condensed_light))
         )
     }
 }
-
 @Composable
 fun ProductItem(image: String, name: String, price: Double, productId: String, navController: NavController) {
     Column(
@@ -467,23 +520,14 @@ fun NavigationGraph(
         composable(ROUTE_HOME_SCREEN.Favorite.name) { FavoriteScreen(innerPadding) }
         composable(ROUTE_HOME_SCREEN.Notification.name) { NotificationScreen(innerPadding) }
         composable(ROUTE_HOME_SCREEN.Profile.name) { AccountScreenControl(innerPadding, navHostController) }
-        composable(
-            route = "category/{categoryName}"
-        ) { backStackEntry ->
-            val categoryName = backStackEntry.arguments?.getString("categoryName") ?: ""
-            CategoryProductsScreen(
-                categoryName = categoryName,
-                innerPadding = innerPadding,
-                navController = navHostController
-            )
-        }
+
         composable(
             route = "productDetail/{productId}"
         ) { backStackEntry ->
             val productId = backStackEntry.arguments?.getString("productId") ?: ""
             ProductDetailScreen(productId, navHostController)
         }
-        composable("cart") { CartScreen(innerPadding, navHostController) } // Assuming you have a CartScreen
+        composable("cart") { CartScreen(innerPadding, navHostController) }
     }
 }
 

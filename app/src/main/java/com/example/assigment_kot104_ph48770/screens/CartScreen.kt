@@ -263,9 +263,12 @@ fun CartItem(cartItem: CartItem, viewModel: ViewModelApp) {
             modifier = Modifier.size(24.dp)
         ) {
             Icon(
-                painter = painterResource(id = R.drawable.apart),
+                painter = painterResource(id = R.drawable.delete),
                 contentDescription = "Remove",
-                tint = Color.Black
+                tint = Color.Black,
+                modifier = Modifier.size(24.dp)
+
+
             )
         }
     }

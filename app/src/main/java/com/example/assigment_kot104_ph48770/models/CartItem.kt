@@ -1,6 +1,7 @@
 package com.example.assigment_kot104_ph48770.models
 
 data class CartItem(
+
     val product: Product,
     val quantity: Int
 )

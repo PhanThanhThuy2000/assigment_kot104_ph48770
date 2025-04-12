@@ -18,6 +18,9 @@ fun AdminScreen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Text("ADMIN")
+        Spacer(modifier = Modifier.height(16.dp))
+
         Button(
             onClick = { navController.navigate("listCategory") },
             modifier = Modifier
@@ -32,6 +35,12 @@ fun AdminScreen(navController: NavController) {
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Product")
+        }
+        Button(
+            onClick = { navController.navigate("login") },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Đăng xuất")
         }
     }
 }
